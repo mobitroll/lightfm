@@ -1255,6 +1255,7 @@ def predict_lightfm(CSRMatrix item_features,
                                                 &fg.it_repr[row_size*i],
                                                 lightfm.no_components)
             pred_value[i] = pred
+            predictions[i] = pred
 
             if start_idx < top_k:
                 if start_idx == 0:
