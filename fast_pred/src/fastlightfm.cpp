@@ -2,8 +2,8 @@
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "fastlightfm.h"
+#include "assert.h"
 
 #ifdef __APPLE__
 typedef int (*compar_t)(void *, const void *, const void *);
@@ -22,51 +22,6 @@ static void qsort_with_context(void *base, int nmemb, int size, compar_t compar,
 
 
 using namespace std;
-
-#if 0
-/*
- * Utility class for accessing elements
- * of a CSR matrix.
- */
-struct CSRMatrix {
-  cnpy::NpyArray indices;
-  cnpy::NpyArray indptr;
-  cnpy::NpyArray data;
-
-  int rows, cols, nnz;
-
-  CSRMatrix(cnpy::NpyArray &indices, cnpy::NpyArray &indptr,
-            cnpy::NpyArray &data, cnpy::NpyArray &shape) {
-    this->indices = indices;
-    this->indptr = indptr;
-    this->data = data;
-    this->rows = shape.data<int>()[0];
-    this->cols = shape.data<int>()[1];
-    this->nnz = data.num_vals;
-  }
-
-  string toString() {
-    string ret;
-    ret += "indices:" + indices.toString() +
-           "indptr:" + indptr.toString() +
-           "data:" + data.toString();
-    return ret;
-  }
-
-  /*
-   * Return the pointer to the start of the
-   * data for row.
-   */
-  int get_row_start(int row) { return indptr.data<int>()[row]; }
-
-  /*
-   *  Return the pointer to the end of the
-   *  data for row.
-   */
-  int get_row_end(int row) { return indptr.data<int>()[row + 1]; }
-};
-
-#endif
 
 struct FastLightFMCache {
   float *user_repr;
@@ -158,8 +113,7 @@ FastLightFM::~FastLightFM() {
   delete user_features;
 }
 
-void FastLightFM::predict(CSRMatrix *item_features, CSRMatrix *user_features,
-                          int *user_ids, int *item_ids, double *predictions,
+void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
                           int no_examples, long *top_k_indice, long top_k) {
   /*
      Generate predictions.
@@ -173,7 +127,7 @@ void FastLightFM::predict(CSRMatrix *item_features, CSRMatrix *user_features,
   for (int i = 0; i < no_examples; i++) {
     if (lightfm_cache->user_repr_cached[user_ids[i]] == 0) {
       compute_representation(
-          user_features, this->user_embeddings.data<float>(),
+          this->user_features, this->user_embeddings.data<float>(),
           this->user_biases.data<float>(), this->no_components, user_ids[i],
           this->user_scale,
           &lightfm_cache->user_repr[lightfm_cache->stride * user_ids[i]]);
@@ -182,7 +136,7 @@ void FastLightFM::predict(CSRMatrix *item_features, CSRMatrix *user_features,
 
     if (lightfm_cache->item_repr_cached[item_ids[i]] == 0) {
       compute_representation(
-          item_features, this->item_embeddings.data<float>(),
+          this->item_features, this->item_embeddings.data<float>(),
           this->item_biases.data<float>(), this->no_components, item_ids[i],
           this->item_scale,
           &lightfm_cache->item_repr[lightfm_cache->stride * item_ids[i]]);
@@ -232,8 +186,8 @@ void FastLightFM::load(string dir) {
   item_biases = data["item_biases"];
   user_embeddings = data["user_embeddings"];
   user_biases = data["user_biases"];
-  user_features = loadCSRMatrix(cnpy::npz_load(dir + "/user-features.npz"));
-  item_features = loadCSRMatrix(cnpy::npz_load(dir + "/item-features.npz"));
+  user_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/user-features.npz"));
+  item_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/item-features.npz"));
 }
 
 bool FastLightFM::is_initialized() {
@@ -253,3 +207,28 @@ void FastLightFM::dump() {
     std::cout <<"item_features: " << item_features->toString() << "\n";
 }
 #endif //DEBUG
+
+void FastLightFM::predict(cnpy::NpyArray& user_ids,
+                          cnpy::NpyArray& item_ids,
+                          cnpy::NpyArray& predictions) {
+    assert(user_ids.num_vals == item_ids.num_vals == predictions.num_vals);
+
+#ifdef DEBUG
+    /*
+        if user_ids.min() < 0 or item_ids.min() < 0:
+            raise ValueError(
+                "User or item ids cannot be negative. "
+                "Check your inputs for negative numbers "
+                "or very large numbers that can overflow."
+            )
+    */
+#endif // DEBUG
+
+    predict(user_ids,
+            item_ids,
+            predictions,
+            lightfm_data,
+        );
+
+        return predictions;
+}

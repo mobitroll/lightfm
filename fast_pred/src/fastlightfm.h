@@ -1,9 +1,10 @@
 #ifndef FASTLIGHTFM_H
 #define FASTLIGHTFM_H
 
-#include "cnpy.h"
-#include "csrmatrix.h"
 #include <string>
+
+#include "cnpy.h"
+#include "utils.h"
 
 /**
  * Class holds all the model state.
