@@ -45,6 +45,14 @@ struct CSRMatrix {
     this->nnz = data.num_vals;
   }
 
+  string toString() {
+    string ret;
+    ret += "indices:" + indices.toString() +
+           "indptr:" + indptr.toString() +
+           "data:" + data.toString();
+    return ret;
+  }
+
   /*
    * Return the pointer to the start of the
    * data for row.
@@ -90,9 +98,11 @@ struct FastLightFMCache {
  * The last element of the representation is the bias.
  */
 static void compute_representation(CSRMatrix *features,
-                                   float * /*feature_embeddings*/,
-                                   float *feature_biases, int no_components,
-                                   int row_id, double scale,
+                                   float *feature_embeddings,
+                                   float *feature_biases,
+                                   int no_components,
+                                   int row_id,
+                                   double scale,
                                    float *representation) {
   for (int i = 0; i < no_components + 1; i++) {
     representation[i] = 0.0;
@@ -106,8 +116,7 @@ static void compute_representation(CSRMatrix *features,
     float feature_weight = features->data.data<float>()[i] * scale;
 
     for (int j = 0; j < no_components; j++) {
-      // TODO: the index needs to be fixed
-      // representation[j] += feature_weight * feature_embeddings[feature, j];
+        representation[j] += feature_weight * feature_embeddings[feature * no_components + j];
     }
 
     representation[no_components] += feature_weight * feature_biases[feature];
@@ -234,15 +243,13 @@ bool FastLightFM::is_initialized() {
            lightfm_cache );
 }
 
+#ifdef DEBUG
 void FastLightFM::dump() {
     std::cout <<"item_embeddings: " << item_embeddings.toString() << "\n";
     std::cout <<"item_biases: " << item_biases.toString() << "\n";
     std::cout <<"user_embeddings: " << user_embeddings.toString() << "\n";
     std::cout <<"user_biases: "<< user_biases.toString() << "\n";
-    std::cout <<"user_features ";
-    //user_features.dump();
-    
-    std::cout <<"item_features: ";
-    //item_features.dump();
+    std::cout <<"user_features " << user_features->toString() << "\n";
+    std::cout <<"item_features: " << item_features->toString() << "\n";
 }
-
+#endif //DEBUG

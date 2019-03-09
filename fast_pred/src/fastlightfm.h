@@ -39,7 +39,9 @@ public:
                int no_examples, long *top_k_indice, long top_k);
 
   bool is_initialized();
+#ifdef DEBUG
   void dump();
+#endif // DEBUG
 };
 
 #endif // FASTLIGHTFM_H

@@ -36,7 +36,7 @@ LIBS = -lz
 default_target: so
 
 .PHONY: test
-test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g
+test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
 test: dirs $(OBJECTS)
 	@echo "Making test app: $@"
 	$(CXX) -I $(SRC_PATH) test.cpp $(OBJECTS) -o $(BIN_PATH)/$@ $(LIBS) $(CXXFLAGS)
