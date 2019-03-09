@@ -62,7 +62,7 @@ struct NpyArray {
     std::string ret(buf);
     ret += " shape:";
     for (auto itr = shape.begin(); itr != shape.end(); ++itr) {
-       snprintf(buf, 1024, "%lu", *itr);
+       snprintf(buf, 1024, "%lu ", *itr);
        ret += std::string(buf); 
     }
     return ret;
