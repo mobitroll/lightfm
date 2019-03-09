@@ -32,13 +32,14 @@ public:
 
   virtual ~FastLightFM();
 
-  bool load(std::string dir);
+  void load(std::string dir);
 
   void predict(CSRMatrix *item_features, CSRMatrix *user_features,
                int *user_ids, int *item_ids, double *predictions,
                int no_examples, long *top_k_indice, long top_k);
 
   bool is_initialized();
+  void dump();
 };
 
 #endif // FASTLIGHTFM_H

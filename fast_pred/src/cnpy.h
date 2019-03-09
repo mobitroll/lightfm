@@ -55,6 +55,18 @@ struct NpyArray {
   size_t word_size;
   bool fortran_order;
   size_t num_vals;
+
+  std::string toString() {
+    char buf[1024];
+    snprintf(buf, 1024, "num_vals:%lu word_size:%lu", num_vals, word_size);    
+    std::string ret(buf);
+    ret += " shape:";
+    for (auto itr = shape.begin(); itr != shape.end(); ++itr) {
+       snprintf(buf, 1024, "%lu", *itr);
+       ret += std::string(buf); 
+    }
+    return ret;
+  }
 };
 
 using npz_t = std::map<std::string, NpyArray>;

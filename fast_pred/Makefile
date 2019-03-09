@@ -1,14 +1,14 @@
 CXX ?= g++
 
 # path #
-SRC_PATH = .
+SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = bin
 TEST_SRC_PATH = test
 TEST_BUILD_PATH = $(BUILD_PATH)/test
 
 # executable # 
-BIN_NAME = fastlightfmpred.so
+SO_NAME = fastlightfmpred.so
 TEST_BIN_NAME = test
 
 # extensions #
@@ -27,18 +27,23 @@ TEST_OBJECTS = $(TEST_SOURCES:$(TEST_SRC_PATH)/%.$(SRC_EXT)=$(TEST_BUILD_PATH)/%
 DEPS = $(OBJECTS:.o=.d)
 
 # flags #
-COMPILE_FLAGS = -std=c++11 -Wall -Wextra -g -fPIC
-INCLUDES = -I include/ -I /usr/local/include -I .
+COMPILE_FLAGS = -std=c++11 -Wall -Wextra -fPIC
+INCLUDES = -I include/ -I /usr/local/include
 # Space-separated pkg-config libraries used by this project
 LIBS = -lz
 
 .PHONY: default_target
-default_target: release
+default_target: so
+
+.PHONY: test
+test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g
+test: dirs $(OBJECTS)
+	@echo "Making test app: $@"
+	$(CXX) -I $(SRC_PATH) test.cpp $(OBJECTS) -o $(BIN_PATH)/$@ $(LIBS) $(CXXFLAGS)
 
 .PHONY: release
-release: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS)
-release: dirs
-	@$(MAKE) all
+release: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -O3
+release: so
 
 .PHONY: dirs
 dirs:
@@ -59,11 +64,12 @@ test: dirs $(BIN_PATH)/test
 	$(BIN_PATH)/test
 
 # checks the executable and symlinks to the output
-.PHONY: all
-all: $(BIN_PATH)/$(BIN_NAME)
+
+.PHONY: so
+so: dirs $(BIN_PATH)/$(SO_NAME)
 
 # Creation of the executable
-$(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
+$(BIN_PATH)/$(SO_NAME): $(OBJECTS)
 	@echo "Linking: $@"
 	$(CXX) $(OBJECTS) -o $@ -shared $(LIBS)
 

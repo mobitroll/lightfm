@@ -20,6 +20,46 @@ static void qsort_with_context(void *base, int nmemb, int size, compar_t compar,
 #endif // __APPLE__
 }
 
+
+using namespace std;
+
+#if 0
+/*
+ * Utility class for accessing elements
+ * of a CSR matrix.
+ */
+struct CSRMatrix {
+  cnpy::NpyArray indices;
+  cnpy::NpyArray indptr;
+  cnpy::NpyArray data;
+
+  int rows, cols, nnz;
+
+  CSRMatrix(cnpy::NpyArray &indices, cnpy::NpyArray &indptr,
+            cnpy::NpyArray &data, cnpy::NpyArray &shape) {
+    this->indices = indices;
+    this->indptr = indptr;
+    this->data = data;
+    this->rows = shape.data<int>()[0];
+    this->cols = shape.data<int>()[1];
+    this->nnz = data.num_vals;
+  }
+
+  /*
+   * Return the pointer to the start of the
+   * data for row.
+   */
+  int get_row_start(int row) { return indptr.data<int>()[row]; }
+
+  /*
+   *  Return the pointer to the end of the
+   *  data for row.
+   */
+  int get_row_end(int row) { return indptr.data<int>()[row + 1]; }
+};
+
+#endif
+
 struct FastLightFMCache {
   float *user_repr;
   int *user_repr_cached;
@@ -177,17 +217,14 @@ void FastLightFM::predict(CSRMatrix *item_features, CSRMatrix *user_features,
 }
 
 // Load the model
-bool FastLightFM::load(std::string dir) {
+void FastLightFM::load(string dir) {
   cnpy::npz_t data = cnpy::npz_load(dir + "/model.npz");
-  // TODO: we need to implement this.
-  // model = LightFM(**hyper_params["model_params"])
   item_embeddings = data["item_embeddings"];
   item_biases = data["item_biases"];
   user_embeddings = data["user_embeddings"];
   user_biases = data["user_biases"];
   user_features = loadCSRMatrix(cnpy::npz_load(dir + "/user-features.npz"));
   item_features = loadCSRMatrix(cnpy::npz_load(dir + "/item-features.npz"));
-  return true;
 }
 
 bool FastLightFM::is_initialized() {
@@ -196,3 +233,16 @@ bool FastLightFM::is_initialized() {
            user_features &&
            lightfm_cache );
 }
+
+void FastLightFM::dump() {
+    std::cout <<"item_embeddings: " << item_embeddings.toString() << "\n";
+    std::cout <<"item_biases: " << item_biases.toString() << "\n";
+    std::cout <<"user_embeddings: " << user_embeddings.toString() << "\n";
+    std::cout <<"user_biases: "<< user_biases.toString() << "\n";
+    std::cout <<"user_features ";
+    //user_features.dump();
+    
+    std::cout <<"item_features: ";
+    //item_features.dump();
+}
+
