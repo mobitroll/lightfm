@@ -2,9 +2,8 @@
 #define FASTLIGHTFM_H
 
 #include "cnpy.h"
+#include "csrmatrix.h"
 #include <string>
-
-struct CSRMatrix;
 
 /**
  * Class holds all the model state.
@@ -38,6 +37,8 @@ public:
   void predict(CSRMatrix *item_features, CSRMatrix *user_features,
                int *user_ids, int *item_ids, double *predictions,
                int no_examples, long *top_k_indice, long top_k);
+
+  bool is_initialized();
 };
 
 #endif // FASTLIGHTFM_H
