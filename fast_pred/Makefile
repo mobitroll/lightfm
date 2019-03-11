@@ -54,8 +54,9 @@ clean:
 	@$(RM) -r $(BIN_PATH)
 
 .PHONY: test
+test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS)
 test: dirs $(BIN_PATH)/test
-	$(BIN_PATH)/test --success
+	$(BIN_PATH)/test
 
 # checks the executable and symlinks to the output
 .PHONY: all
@@ -64,13 +65,12 @@ all: $(BIN_PATH)/$(BIN_NAME)
 # Creation of the executable
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 	@echo "Linking: $@"
-	@echo "$<"
 	$(CXX) $(OBJECTS) -o $@ -shared $(LIBS)
 
 # Tests
-$(BIN_PATH)/$(TEST_BIN_NAME): $(TEST_OBJECTS)
+$(BIN_PATH)/$(TEST_BIN_NAME): $(TEST_OBJECTS) $(OBJECTS)
 	@echo "Linking: $@"
-	$(CXX) $(TEST_OBJECTS) -o $@
+	$(CXX) $(TEST_OBJECTS) $(OBJECTS) -o $@ $(LIBS)
 
 # Add dependency files, if they exist
 -include $(DEPS)
@@ -85,4 +85,4 @@ $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 # Tests
 $(TEST_BUILD_PATH)/%.o: $(TEST_SRC_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"
-	$(CXX) -std=c++11 -I $(TEST_SRC_PATH) $(INCLUDES) -Wall -c $< -o $@
+	$(CXX) $(CXXFLAGS) -I $(TEST_SRC_PATH) -I $(SRC_PATH) $(INCLUDES) -c $< -o $@

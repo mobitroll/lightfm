@@ -20,40 +20,6 @@ static void qsort_with_context(void *base, int nmemb, int size, compar_t compar,
 #endif // __APPLE__
 }
 
-/*
- * Utility class for accessing elements
- * of a CSR matrix.
- */
-struct CSRMatrix {
-  cnpy::NpyArray indices;
-  cnpy::NpyArray indptr;
-  cnpy::NpyArray data;
-
-  int rows, cols, nnz;
-
-  CSRMatrix(cnpy::NpyArray &indices, cnpy::NpyArray &indptr,
-            cnpy::NpyArray &data, cnpy::NpyArray &shape) {
-    this->indices = indices;
-    this->indptr = indptr;
-    this->data = data;
-    this->rows = shape.data<int>()[0];
-    this->cols = shape.data<int>()[1];
-    this->nnz = data.num_vals;
-  }
-
-  /*
-   * Return the pointer to the start of the
-   * data for row.
-   */
-  int get_row_start(int row) { return indptr.data<int>()[row]; }
-
-  /*
-   *  Return the pointer to the end of the
-   *  data for row.
-   */
-  int get_row_end(int row) { return indptr.data<int>()[row + 1]; }
-};
-
 struct FastLightFMCache {
   float *user_repr;
   int *user_repr_cached;
@@ -210,14 +176,6 @@ void FastLightFM::predict(CSRMatrix *item_features, CSRMatrix *user_features,
   free(pred_table);
 }
 
-static CSRMatrix *loadCSRMatrix(cnpy::npz_t csrmatrix) {
-  cnpy::NpyArray indices = csrmatrix["indices"];
-  cnpy::NpyArray indptr = csrmatrix["indptr"];
-  cnpy::NpyArray data = csrmatrix["data"];
-  cnpy::NpyArray shape = csrmatrix["shape"];
-  return new CSRMatrix(indices, indptr, data, shape);
-}
-
 // Load the model
 bool FastLightFM::load(std::string dir) {
   cnpy::npz_t data = cnpy::npz_load(dir + "/model.npz");
@@ -230,4 +188,11 @@ bool FastLightFM::load(std::string dir) {
   user_features = loadCSRMatrix(cnpy::npz_load(dir + "/user-features.npz"));
   item_features = loadCSRMatrix(cnpy::npz_load(dir + "/item-features.npz"));
   return true;
+}
+
+bool FastLightFM::is_initialized() {
+  return ( no_components > 0 &&
+           item_features &&
+           user_features &&
+           lightfm_cache );
 }
