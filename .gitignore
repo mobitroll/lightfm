@@ -7,6 +7,7 @@ examples/movielens/.ipynb_checkpoints/
 examples/quickstart/.ipynb_checkpoints/
 examples/stackexchange/.ipynb_checkpoints/
 build/
+bin/
 dist/
 bench/
 *#*
