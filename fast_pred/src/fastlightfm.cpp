@@ -113,7 +113,8 @@ FastLightFM::~FastLightFM() {
   delete user_features;
 }
 
-void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
+void FastLightFM::predict(CSRMatrix *item_features, CSRMatrix *user_features,
+                          int *user_ids, int *item_ids, double *predictions,
                           int no_examples, long *top_k_indice, long top_k) {
   /*
      Generate predictions.
@@ -208,6 +209,8 @@ void FastLightFM::dump() {
 }
 #endif //DEBUG
 
+
+#if 0
 void FastLightFM::predict(cnpy::NpyArray& user_ids,
                           cnpy::NpyArray& item_ids,
                           cnpy::NpyArray& predictions) {
@@ -232,3 +235,4 @@ void FastLightFM::predict(cnpy::NpyArray& user_ids,
 
         return predictions;
 }
+#endif

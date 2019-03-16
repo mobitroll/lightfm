@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "csrmatrix.h"
 
 CSRMatrix* CSRMatrix::newInstance(cnpy::npz_t csrmatrix) {
   cnpy::NpyArray indices = csrmatrix["indices"];
