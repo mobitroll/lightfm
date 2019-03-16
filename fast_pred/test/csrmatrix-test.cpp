@@ -4,7 +4,7 @@
 /* See gennpz.py for the test data */
 
 TEST_CASE( "Can load a csr sparse npz into CSRMatrix" ) {
-    CSRMatrix *csrmatrix = loadCSRMatrix(cnpy::npz_load("test/data/sptest.npz"));
+    CSRMatrix *csrmatrix = CSRMatrix::newInstance(cnpy::npz_load("test/data/sptest.npz"));
     REQUIRE( csrmatrix->rows == 3 );
     REQUIRE( csrmatrix->nnz == 3 );
     REQUIRE( csrmatrix->cols == 3 );

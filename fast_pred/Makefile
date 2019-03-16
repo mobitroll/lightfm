@@ -35,11 +35,11 @@ LIBS = -lz
 .PHONY: default_target
 default_target: so
 
-.PHONY: test
-test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
-test: dirs $(OBJECTS)
-	@echo "Making test app: $@"
-	$(CXX) -I $(SRC_PATH) test.cpp $(OBJECTS) -o $(BIN_PATH)/$@ $(LIBS) $(CXXFLAGS)
+.PHONY: example
+example: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
+example: dirs $(OBJECTS)
+	@echo "Making example app: $@"
+	$(CXX) -I $(SRC_PATH) example/main.cpp $(OBJECTS) -o $(BIN_PATH)/$@ $(LIBS) $(CXXFLAGS)
 
 .PHONY: release
 release: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -O3
@@ -59,9 +59,9 @@ clean:
 	@$(RM) -r $(BIN_PATH)
 
 .PHONY: test
-test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS)
-test: dirs $(BIN_PATH)/test
-	$(BIN_PATH)/test
+test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -DDEBUG
+test: dirs $(BIN_PATH)/$(TEST_BIN_NAME)
+	$(BIN_PATH)/$(TEST_BIN_NAME)
 
 # checks the executable and symlinks to the output
 

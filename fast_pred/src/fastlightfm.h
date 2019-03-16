@@ -4,7 +4,7 @@
 #include <string>
 
 #include "cnpy.h"
-#include "utils.h"
+#include "csrmatrix.h"
 
 /**
  * Class holds all the model state.
