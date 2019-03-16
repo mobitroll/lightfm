@@ -3,6 +3,7 @@
 
 #include <string>
 #include "cnpy.h"
+#include "utils.h"
 
 /*
  * Utility class for accessing elements
@@ -20,8 +21,8 @@ struct CSRMatrix {
     this->indices = indices;
     this->indptr = indptr;
     this->data = data;
-    this->rows = shape.data<int>()[0];
-    this->cols = shape.data<int>()[1];
+    this->rows = shape.data<size_t>()[0];
+    this->cols = shape.data<size_t>()[1];
     this->nnz = data.num_vals;
   }
 
@@ -29,7 +30,9 @@ struct CSRMatrix {
     std::string ret;
     ret += "indices:" + indices.toString() +
            "indptr:" + indptr.toString() +
-           "data:" + data.toString();
+           "data:" + data.toString() +
+           "rows:" + lm_utils::intToString(this->rows) +
+           "cols:" + lm_utils::intToString(this->cols);
     return ret;
   }
 
