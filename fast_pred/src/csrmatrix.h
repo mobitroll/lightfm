@@ -1,6 +1,7 @@
 #ifndef CSRMATRIX_H
-#define CSRMATRIX_H
+# define CSRMATRIX_H
 
+#include <string>
 #include "cnpy.h"
 
 /*
@@ -24,6 +25,14 @@ struct CSRMatrix {
     this->nnz = data.num_vals;
   }
 
+  std::string toString() {
+    std::string ret;
+    ret += "indices:" + indices.toString() +
+           "indptr:" + indptr.toString() +
+           "data:" + data.toString();
+    return ret;
+  }
+
   /*
    * Return the pointer to the start of the
    * data for row.
@@ -35,8 +44,8 @@ struct CSRMatrix {
    *  data for row.
    */
   int get_row_end(int row) { return indptr.data<int>()[row + 1]; }
-};
 
-CSRMatrix *loadCSRMatrix(cnpy::npz_t csrmatrix);
+  static CSRMatrix* newInstance(cnpy::npz_t csrmatrix);
+};
 
 #endif // CSRMATRIX_H
