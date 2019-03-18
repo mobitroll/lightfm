@@ -66,6 +66,7 @@ test: dirs $(BIN_PATH)/$(TEST_BIN_NAME)
 # checks the executable and symlinks to the output
 
 .PHONY: so
+so: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
 so: dirs $(BIN_PATH)/$(SO_NAME)
 
 # Creation of the executable

@@ -113,7 +113,7 @@ FastLightFM::~FastLightFM() {
   delete user_features;
 }
 
-void FastLightFM::predict(CSRMatrix *item_features, CSRMatrix *user_features,
+void FastLightFM::predict(CSRMatrix* /*item_features*/, CSRMatrix* /*user_features*/,
                           int *user_ids, int *item_ids, double *predictions,
                           int no_examples, long *top_k_indice, long top_k) {
   /*
