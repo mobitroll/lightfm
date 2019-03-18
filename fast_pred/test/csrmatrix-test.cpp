@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include "catch.h"
 #include "fastlightfm.h"
 
 /* See gennpz.py for the test data */

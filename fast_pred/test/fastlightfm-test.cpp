@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include "catch.h"
 #include "fastlightfm.h"
 
 TEST_CASE( "FastLightFM can be constructed with defaults" ) {
