@@ -7,6 +7,7 @@ examples/movielens/.ipynb_checkpoints/
 examples/quickstart/.ipynb_checkpoints/
 examples/stackexchange/.ipynb_checkpoints/
 build/
+bin/
 dist/
 bench/
 *#*
@@ -16,3 +17,4 @@ doc/_build/*
 lightfm/_lightfm_fast_openmp.pyx
 lightfm/_lightfm_fast_no_openmp.pyx
 *.*-checkpoint
+.vscode
