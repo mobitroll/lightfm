@@ -194,10 +194,6 @@ void FastLightFM::load(string dir) {
   no_components = item_embeddings.shape[1];
 }
 
-int FastLightFM::get_no_components() {
-  return no_components;
-}
-
 bool FastLightFM::is_initialized() {
   return ( no_components > 0 &&
            item_features &&
