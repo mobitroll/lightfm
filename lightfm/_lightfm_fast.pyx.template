@@ -1284,7 +1284,7 @@ def predict_lightfm_with_cache(CSRMatrix item_features,
         pred_value = <flt *>malloc(sizeof(flt) * no_examples)
 
         for i in range(no_examples):
-            if lightfm_cache.user_repr_cached[user_ids[i]] == 0:
+            if user_ids[i] == 0 or lightfm_cache.user_repr_cached[user_ids[i]] == 0:
                 compute_representation(user_features,
                                        lightfm.user_features,
                                        lightfm.user_biases,
