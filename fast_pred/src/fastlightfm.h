@@ -40,6 +40,9 @@ public:
                int no_examples, long *top_k_indice, long top_k);
 
   bool is_initialized();
+
+  int get_no_components();
+  
 #ifdef DEBUG
   void dump();
 #endif // DEBUG

@@ -24,6 +24,6 @@ std::string CSRMatrix::toString() {
         "indptr:" + indptr.toString() +
         "data:" + data.toString() +
         "rows:" + lm_utils::intToString(this->rows) +
-        "cols:" + lm_utils::intToString(this->cols);
+        " cols:" + lm_utils::intToString(this->cols);
     return ret;
 }
