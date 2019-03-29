@@ -189,6 +189,9 @@ void FastLightFM::load(string dir) {
   user_biases = data["user_biases"];
   user_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/user-features.npz"));
   item_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/item-features.npz"));
+
+  assert(item_embeddings.shape[1] == user_embeddings.shape[1]);
+  no_components = item_embeddings.shape[1];
 }
 
 bool FastLightFM::is_initialized() {

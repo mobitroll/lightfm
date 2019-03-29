@@ -1,6 +1,8 @@
 #ifndef FASTLIGHTFM_H
 #define FASTLIGHTFM_H
 
+#include "config.h"
+
 #include <string>
 
 #include "cnpy.h"
@@ -40,9 +42,12 @@ public:
                int no_examples, long *top_k_indice, long top_k);
 
   bool is_initialized();
+
 #ifdef DEBUG
   void dump();
 #endif // DEBUG
+
+  CATCH_TEST
 };
 
 #endif // FASTLIGHTFM_H

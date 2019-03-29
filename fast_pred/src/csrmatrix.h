@@ -1,6 +1,7 @@
 #ifndef CSRMATRIX_H
 # define CSRMATRIX_H
 
+#include "config.h"
 #include <string>
 #include "cnpy.h"
 #include "utils.h"
@@ -34,6 +35,8 @@ struct CSRMatrix {
   int get_row_end(int row) { return indptr.data<int>()[row + 1]; }
 
   static CSRMatrix* newInstance(cnpy::npz_t csrmatrix);
+
+  CATCH_TEST
 };
 
 #endif // CSRMATRIX_H
