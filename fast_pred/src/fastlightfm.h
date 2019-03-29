@@ -1,6 +1,8 @@
 #ifndef FASTLIGHTFM_H
 #define FASTLIGHTFM_H
 
+#include "config.h"
+
 #include <string>
 
 #include "cnpy.h"
@@ -41,11 +43,11 @@ public:
 
   bool is_initialized();
 
-  int get_no_components();
-  
 #ifdef DEBUG
   void dump();
 #endif // DEBUG
+
+  CATCH_TEST
 };
 
 #endif // FASTLIGHTFM_H

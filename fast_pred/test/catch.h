@@ -382,10 +382,16 @@ namespace Catch {
 // end catch_compiler_capabilities.h
 #define INTERNAL_CATCH_UNIQUE_NAME_LINE2( name, line ) name##line
 #define INTERNAL_CATCH_UNIQUE_NAME_LINE( name, line ) INTERNAL_CATCH_UNIQUE_NAME_LINE2( name, line )
+
+#define INTERNAL_CATCH_UNIQUE_NAME_LINE2_T( name, counter ,line ) name<counter##line>
+#define INTERNAL_CATCH_UNIQUE_NAME_LINE_T( name, counter, line ) INTERNAL_CATCH_UNIQUE_NAME_LINE2_T( name, counter, line )
+
 #ifdef CATCH_CONFIG_COUNTER
 #  define INTERNAL_CATCH_UNIQUE_NAME( name ) INTERNAL_CATCH_UNIQUE_NAME_LINE( name, __COUNTER__ )
+#  define INTERNAL_CATCH_UNIQUE_NAME_T( name ) INTERNAL_CATCH_UNIQUE_NAME_LINE_T( name, __COUNTER__ , __LINE__)
 #else
 #  define INTERNAL_CATCH_UNIQUE_NAME( name ) INTERNAL_CATCH_UNIQUE_NAME_LINE( name, __LINE__ )
+#  define INTERNAL_CATCH_UNIQUE_NAME_T( name ) INTERNAL_CATCH_UNIQUE_NAME_LINE( name, __LINE__, __LINE__ )
 #endif
 
 #include <iosfwd>
@@ -870,13 +876,13 @@ struct AutoReg : NonCopyable {
 
     ///////////////////////////////////////////////////////////////////////////////
     #define INTERNAL_CATCH_TESTCASE2( TestName, ... ) \
-        static void TestName(); \
+        template<> void TestName(); \
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS \
         namespace{ Catch::AutoReg INTERNAL_CATCH_UNIQUE_NAME( autoRegistrar )( Catch::makeTestInvoker( &TestName ), CATCH_INTERNAL_LINEINFO, Catch::StringRef(), Catch::NameAndTags{ __VA_ARGS__ } ); } /* NOLINT */ \
         CATCH_INTERNAL_UNSUPPRESS_GLOBALS_WARNINGS \
-        static void TestName()
+        template<> void TestName()
     #define INTERNAL_CATCH_TESTCASE( ... ) \
-        INTERNAL_CATCH_TESTCASE2( INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ), __VA_ARGS__ )
+        INTERNAL_CATCH_TESTCASE2( INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ), __VA_ARGS__ )
 
     ///////////////////////////////////////////////////////////////////////////////
     #define INTERNAL_CATCH_METHOD_AS_TEST_CASE( QualifiedMethod, ... ) \
@@ -896,7 +902,7 @@ struct AutoReg : NonCopyable {
         CATCH_INTERNAL_UNSUPPRESS_GLOBALS_WARNINGS \
         void TestName::test()
     #define INTERNAL_CATCH_TEST_CASE_METHOD( ClassName, ... ) \
-        INTERNAL_CATCH_TEST_CASE_METHOD2( INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ), ClassName, __VA_ARGS__ )
+        INTERNAL_CATCH_TEST_CASE_METHOD2( INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ), ClassName, __VA_ARGS__ )
 
     ///////////////////////////////////////////////////////////////////////////////
     #define INTERNAL_CATCH_REGISTER_TESTCASE( Function, ... ) \
@@ -947,7 +953,7 @@ struct AutoReg : NonCopyable {
 
     #define INTERNAL_CATCH_TEMPLATE_PRODUCT_TEST_CASE2(TestName, TestFuncName, Name, Tags, TmplTypes, TypesList) \
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS                      \
-        template<typename TestType> static void TestFuncName();       \
+        template<typename TestType>  void TestFuncName();       \
         namespace {                                                   \
             template<typename... Types>                               \
             struct TestName {                                         \
@@ -14793,8 +14799,8 @@ using Catch::Detail::Approx;
 #define CATCH_WARN( msg )    (void)(0)
 #define CATCH_CAPTURE( msg ) (void)(0)
 
-#define CATCH_TEST_CASE( ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
-#define CATCH_TEST_CASE_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
+#define CATCH_TEST_CASE( ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ))
+#define CATCH_TEST_CASE_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ))
 #define CATCH_METHOD_AS_TEST_CASE( method, ... )
 #define CATCH_REGISTER_TEST_CASE( Function, ... ) (void)(0)
 #define CATCH_SECTION( ... )
@@ -14803,7 +14809,7 @@ using Catch::Detail::Approx;
 #define CATCH_FAIL_CHECK( ... ) (void)(0)
 #define CATCH_SUCCEED( ... ) (void)(0)
 
-#define CATCH_ANON_TEST_CASE() INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
+#define CATCH_ANON_TEST_CASE() INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ))
 
 #ifndef CATCH_CONFIG_TRADITIONAL_MSVC_PREPROCESSOR
 #define CATCH_TEMPLATE_TEST_CASE( ... ) INTERNAL_CATCH_TEMPLATE_TEST_CASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_M_P_L_A_T_E____T_E_S_T____ ) )
@@ -14818,8 +14824,8 @@ using Catch::Detail::Approx;
 #endif
 
 // "BDD-style" convenience wrappers
-#define CATCH_SCENARIO( ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
-#define CATCH_SCENARIO_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_METHOD_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ), className )
+#define CATCH_SCENARIO( ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ))
+#define CATCH_SCENARIO_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_METHOD_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ), className )
 #define CATCH_GIVEN( desc )
 #define CATCH_AND_GIVEN( desc )
 #define CATCH_WHEN( desc )
@@ -14868,8 +14874,8 @@ using Catch::Detail::Approx;
 #define WARN( msg ) (void)(0)
 #define CAPTURE( msg ) (void)(0)
 
-#define TEST_CASE( ... )  INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
-#define TEST_CASE_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
+#define TEST_CASE( ... )  INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ))
+#define TEST_CASE_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ))
 #define METHOD_AS_TEST_CASE( method, ... )
 #define REGISTER_TEST_CASE( Function, ... ) (void)(0)
 #define SECTION( ... )
@@ -14877,7 +14883,7 @@ using Catch::Detail::Approx;
 #define FAIL( ... ) (void)(0)
 #define FAIL_CHECK( ... ) (void)(0)
 #define SUCCEED( ... ) (void)(0)
-#define ANON_TEST_CASE() INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
+#define ANON_TEST_CASE() INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ))
 
 #ifndef CATCH_CONFIG_TRADITIONAL_MSVC_PREPROCESSOR
 #define TEMPLATE_TEST_CASE( ... ) INTERNAL_CATCH_TEMPLATE_TEST_CASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_M_P_L_A_T_E____T_E_S_T____ ) )
@@ -14899,8 +14905,8 @@ using Catch::Detail::Approx;
 #define CATCH_TRANSLATE_EXCEPTION( signature ) INTERNAL_CATCH_TRANSLATE_EXCEPTION_NO_REG( INTERNAL_CATCH_UNIQUE_NAME( catch_internal_ExceptionTranslator ), signature )
 
 // "BDD-style" convenience wrappers
-#define SCENARIO( ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ) )
-#define SCENARIO_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_METHOD_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ), className )
+#define SCENARIO( ... ) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ) )
+#define SCENARIO_METHOD( className, ... ) INTERNAL_CATCH_TESTCASE_METHOD_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME_T( ____C_A_T_C_H____T_E_S_T____ ), className )
 
 #define GIVEN( desc )
 #define AND_GIVEN( desc )
@@ -14930,4 +14936,11 @@ using Catch::Detail::Approx;
 
 // end catch_reenable_warnings.h
 // end catch.hpp
+
+template<int T> void ____C_A_T_C_H____T_E_S_T____() {
+    assert(0);
+}
+
+#define CATCH_TEST template<int T> friend void ____C_A_T_C_H____T_E_S_T____();
+
 #endif // TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
