@@ -45,8 +45,9 @@ public:
 
 #ifdef DEBUG
   void dump();
-  CATCH_TEST
 #endif // DEBUG
+
+  CATCH_TEST
 };
 
 #endif // FASTLIGHTFM_H
