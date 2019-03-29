@@ -114,7 +114,7 @@ FastLightFM::~FastLightFM() {
 }
 
 void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
-                          int no_examples, long *top_k_indice, long top_k) {
+                          int no_examples, long *top_k_indices, long top_k) {
 
   assert(is_initialized());
   /*
@@ -173,8 +173,8 @@ void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
     }
   }
 
-  for (int t = 0; t < top_k; top_k++) {
-    top_k_indice[t] = pred_table[t];
+  for (int t = 0; t < top_k; t++) {
+    top_k_indices[t] = pred_table[t];
   }
 
   free(pred_value);
@@ -202,8 +202,7 @@ void FastLightFM::init() {
   number_of_items = item_features->rows;
   number_of_users = user_features->rows;
 
-  int stride = no_components; // TODO: What should stride really be?
-
+  int stride = no_components + 1;
   lightfm_cache = new FastLightFMCache(number_of_items, number_of_users, stride);
 }
 
