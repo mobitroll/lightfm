@@ -111,6 +111,7 @@ static int pred_compar(const void *a, const void *b, void *arg) {
 FastLightFM::~FastLightFM() {
   delete item_features;
   delete user_features;
+  delete lightfm_cache;
 }
 
 void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
