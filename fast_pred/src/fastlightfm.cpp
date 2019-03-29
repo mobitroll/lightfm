@@ -113,9 +113,10 @@ FastLightFM::~FastLightFM() {
   delete user_features;
 }
 
-void FastLightFM::predict(CSRMatrix* /*item_features*/, CSRMatrix* /*user_features*/,
-                          int *user_ids, int *item_ids, double *predictions,
+void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
                           int no_examples, long *top_k_indice, long top_k) {
+
+  assert(is_initialized());
   /*
      Generate predictions.
      */
@@ -190,15 +191,29 @@ void FastLightFM::load(string dir) {
   user_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/user-features.npz"));
   item_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/item-features.npz"));
 
+  init();
+}
+
+void FastLightFM::init() {
+
   assert(item_embeddings.shape[1] == user_embeddings.shape[1]);
   no_components = item_embeddings.shape[1];
+
+  number_of_items = item_features->rows;
+  number_of_users = user_features->rows;
+
+  int stride = no_components; // TODO: What should stride really be?
+
+  lightfm_cache = new FastLightFMCache(number_of_items, number_of_users, stride);
 }
 
 bool FastLightFM::is_initialized() {
   return ( no_components > 0 &&
-           item_features &&
+           number_of_users > 0 &&
+           number_of_items > 0 &&
            user_features &&
-           lightfm_cache );
+           item_features &&
+           lightfm_cache);
 }
 
 #ifdef DEBUG
