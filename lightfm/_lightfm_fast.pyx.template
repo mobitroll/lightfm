@@ -1227,7 +1227,7 @@ cdef int pred_compar(void *arg, const_void *a, const_void* b) nogil:
     else:
         return 0
 
-def predict_lightfm_fast_init(model_dir):
+def initialize_lightfm_cxx(model_dir):
     if not isinstance(model_dir, unicode):
         assert("model_dir needs to be unicd string")
 
@@ -1238,13 +1238,11 @@ def predict_lightfm_fast_init(model_dir):
     fmw.fm = fm
     return fmw
 
-
-def predict_lightfm_fast(int[::1] user_ids,
+def predict_lightfm_cxx(int[::1] user_ids,
                     int[::1] item_ids,
                     double[::1] predictions,
                     long[::1] top_k_indice,
-                    FastLFmWrapper fmw,
-                    int num_threads):
+                    FastLFmWrapper fmw):
     no_examples = predictions.shape[0]
     fast_lfm_predict(fmw.fm, &user_ids[0], &item_ids[0], &predictions[0],
                      no_examples, &top_k_indice[0], top_k_indice.shape[0])

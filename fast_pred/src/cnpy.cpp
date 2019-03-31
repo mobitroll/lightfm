@@ -264,6 +264,7 @@ cnpy::NpyArray load_the_npz_array(FILE *fp, uint32_t compr_bytes,
 
 cnpy::npz_t cnpy::npz_load(std::string fname) {
   FILE *fp = fopen(fname.c_str(), "rb");
+  printf("npz loading %s\n", fname.c_str());
 
   if (!fp) {
     throw std::runtime_error("npz_load: Error! Unable to open file " + fname +
@@ -279,8 +280,10 @@ cnpy::npz_t cnpy::npz_load(std::string fname) {
       throw std::runtime_error("npz_load: failed fread");
 
     // if we've reached the global header, stop reading
-    if (local_header[2] != 0x03 || local_header[3] != 0x04)
+    if (local_header[2] != 0x03 || local_header[3] != 0x04) {
+      printf("breaking %x, %x\n", local_header[2], local_header[3]);
       break;
+    }
 
     // read in the variable name
     uint16_t name_len = *(uint16_t *)&local_header[26];
@@ -306,6 +309,7 @@ cnpy::npz_t cnpy::npz_load(std::string fname) {
     uint32_t uncompr_bytes =
         *reinterpret_cast<uint32_t *>(&local_header[0] + 22);
 
+    printf("loading %s\n", varname.c_str());
     if (compr_method == 0) {
       arrays[varname] = load_the_npy_file(fp);
     } else {

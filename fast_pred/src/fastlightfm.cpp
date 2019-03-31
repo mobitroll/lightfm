@@ -196,7 +196,7 @@ void FastLightFM::load(string dir) {
 }
 
 void FastLightFM::init() {
-
+  dump();
   assert(item_embeddings.shape[1] == user_embeddings.shape[1]);
   no_components = item_embeddings.shape[1];
 
