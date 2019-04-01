@@ -59,7 +59,7 @@ clean:
 	@$(RM) -r $(BIN_PATH)
 
 .PHONY: test
-test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -DDEBUG
+test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
 test: dirs $(BIN_PATH)/$(TEST_BIN_NAME)
 	$(BIN_PATH)/$(TEST_BIN_NAME)
 

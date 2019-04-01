@@ -111,11 +111,13 @@ static int pred_compar(const void *a, const void *b, void *arg) {
 FastLightFM::~FastLightFM() {
   delete item_features;
   delete user_features;
+  delete lightfm_cache;
 }
 
-void FastLightFM::predict(CSRMatrix* /*item_features*/, CSRMatrix* /*user_features*/,
-                          int *user_ids, int *item_ids, double *predictions,
-                          int no_examples, long *top_k_indice, long top_k) {
+void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
+                          int no_examples, long *top_k_indices, long top_k) {
+
+  assert(is_initialized());
   /*
      Generate predictions.
      */
@@ -172,8 +174,8 @@ void FastLightFM::predict(CSRMatrix* /*item_features*/, CSRMatrix* /*user_featur
     }
   }
 
-  for (int t = 0; t < top_k; top_k++) {
-    top_k_indice[t] = pred_table[t];
+  for (int t = 0; t < top_k; t++) {
+    top_k_indices[t] = pred_table[t];
   }
 
   free(pred_value);
@@ -190,15 +192,22 @@ void FastLightFM::load(string dir) {
   user_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/user-features.npz"));
   item_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/item-features.npz"));
 
+  init();
+}
+
+void FastLightFM::init() {
   assert(item_embeddings.shape[1] == user_embeddings.shape[1]);
   no_components = item_embeddings.shape[1];
+  lightfm_cache = new FastLightFMCache(item_features->rows, user_features->rows, no_components + 1);
 }
 
 bool FastLightFM::is_initialized() {
   return ( no_components > 0 &&
-           item_features &&
+           user_features->rows > 0 &&
+           item_features->rows > 0 &&
            user_features &&
-           lightfm_cache );
+           item_features &&
+           lightfm_cache);
 }
 
 #ifdef DEBUG

@@ -28,17 +28,18 @@ class FastLightFM {
 
   struct FastLightFMCache *lightfm_cache;
 
+  void init();
+
 public:
   FastLightFM()
       : item_features(nullptr), user_features(nullptr), no_components(0),
-        item_scale(0.0), user_scale(0.0), lightfm_cache(nullptr) {}
+        item_scale(1.0), user_scale(1.0), lightfm_cache(nullptr) {}
 
   virtual ~FastLightFM();
 
   void load(std::string dir);
 
-  void predict(CSRMatrix *item_features, CSRMatrix *user_features,
-               int *user_ids, int *item_ids, double *predictions,
+  void predict(int *user_ids, int *item_ids, double *predictions,
                int no_examples, long *top_k_indice, long top_k);
 
   bool is_initialized();
