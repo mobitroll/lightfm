@@ -196,21 +196,15 @@ void FastLightFM::load(string dir) {
 }
 
 void FastLightFM::init() {
-
   assert(item_embeddings.shape[1] == user_embeddings.shape[1]);
   no_components = item_embeddings.shape[1];
-
-  number_of_items = item_features->rows;
-  number_of_users = user_features->rows;
-
-  int stride = no_components + 1;
-  lightfm_cache = new FastLightFMCache(number_of_items, number_of_users, stride);
+  lightfm_cache = new FastLightFMCache(item_features->rows, user_features->rows, no_components + 1);
 }
 
 bool FastLightFM::is_initialized() {
   return ( no_components > 0 &&
-           number_of_users > 0 &&
-           number_of_items > 0 &&
+           user_features->rows > 0 &&
+           item_features->rows > 0 &&
            user_features &&
            item_features &&
            lightfm_cache);

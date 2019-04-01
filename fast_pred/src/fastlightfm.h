@@ -22,8 +22,6 @@ class FastLightFM {
   cnpy::NpyArray user_biases;
 
   int no_components;
-  int number_of_users;
-  int number_of_items;
 
   double item_scale;
   double user_scale;
