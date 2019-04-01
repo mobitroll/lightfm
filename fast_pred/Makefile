@@ -27,10 +27,10 @@ TEST_OBJECTS = $(TEST_SOURCES:$(TEST_SRC_PATH)/%.$(SRC_EXT)=$(TEST_BUILD_PATH)/%
 DEPS = $(OBJECTS:.o=.d)
 
 # flags #
-COMPILE_FLAGS = -std=c++11 -Wall -Wextra -fPIC
+COMPILE_FLAGS = -std=c++14 -Wall -Wextra -fPIC
 INCLUDES = -I include/ -I /usr/local/include
 # Space-separated pkg-config libraries used by this project
-LIBS = -lz
+LIBS = -lzip
 
 .PHONY: default_target
 default_target: so
