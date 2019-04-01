@@ -34,7 +34,7 @@ class FastLightFM {
 
 public:
   FastLightFM()
-      : item_features(nullptr), user_features(nullptr),
+      : item_features(nullptr), user_features(nullptr), no_components(0),
         item_scale(1.0), user_scale(1.0), lightfm_cache(nullptr) {}
 
   virtual ~FastLightFM();
