@@ -8,7 +8,7 @@ TEST_SRC_PATH = test
 TEST_BUILD_PATH = $(BUILD_PATH)/test
 
 # executable # 
-SO_NAME = fastlightfmpred.so
+SO_NAME = libfastlightfmpred.so
 TEST_BIN_NAME = test
 
 # extensions #
@@ -27,10 +27,10 @@ TEST_OBJECTS = $(TEST_SOURCES:$(TEST_SRC_PATH)/%.$(SRC_EXT)=$(TEST_BUILD_PATH)/%
 DEPS = $(OBJECTS:.o=.d)
 
 # flags #
-COMPILE_FLAGS = -std=c++11 -Wall -Wextra -fPIC
+COMPILE_FLAGS = -std=c++14 -Wall -Wextra -fPIC
 INCLUDES = -I include/ -I /usr/local/include
 # Space-separated pkg-config libraries used by this project
-LIBS = -lz
+LIBS = -lzip
 
 .PHONY: default_target
 default_target: so
@@ -39,7 +39,11 @@ default_target: so
 example: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
 example: dirs $(OBJECTS)
 	@echo "Making example app: $@"
-	$(CXX) -I $(SRC_PATH) example/main.cpp $(OBJECTS) -o $(BIN_PATH)/$@ $(LIBS) $(CXXFLAGS)
+	$(CXX)  $(INCLUDES) -I $(SRC_PATH) example/main.cpp $(OBJECTS) -o $(BIN_PATH)/$@ $(LIBS) $(CXXFLAGS)
+
+.PHONY: install
+install: so
+	cp $(BIN_PATH)/$(SO_NAME) /usr/local/lib/
 
 .PHONY: release
 release: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -O3
@@ -72,7 +76,7 @@ so: dirs $(BIN_PATH)/$(SO_NAME)
 # Creation of the executable
 $(BIN_PATH)/$(SO_NAME): $(OBJECTS)
 	@echo "Linking: $@"
-	$(CXX) $(OBJECTS) -o $@ -shared $(LIBS)
+	$(CXX) $(OBJECTS) -o $@ -shared -install_name,$(SO_NAME)  $(LIBS)
 
 # Tests
 $(BIN_PATH)/$(TEST_BIN_NAME): $(TEST_OBJECTS) $(OBJECTS)
