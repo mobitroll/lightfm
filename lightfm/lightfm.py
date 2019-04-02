@@ -14,7 +14,9 @@ from ._lightfm_fast import (
     fit_warp_kos,
     predict_lightfm,
     predict_ranks,
-    predict_lightfm_with_cache
+    predict_lightfm_with_cache,
+    initialize_lightfm_cxx,
+    predict_lightfm_cxx
 )
 
 __all__ = ["LightFM"]
@@ -224,6 +226,7 @@ class LightFM(object):
 
         self._reset_state()
         self.cache = None
+        self.lfmw = None
 
     def _reset_state(self):
 
@@ -848,6 +851,55 @@ class LightFM(object):
             self.cache,
             num_threads,
         )
+
+        return predictions, top_k_indice
+
+    def initialize_cxx(self, model_dir):
+        self.lfmw = initialize_lightfm_cxx(model_dir)
+
+    def predict_top_k_cxx(
+        self, user_ids, item_ids, item_features=None, user_features=None, top_k=10
+    ):
+        self._check_initialized()
+
+        if not isinstance(user_ids, np.ndarray):
+            user_ids = np.repeat(np.int32(user_ids), len(item_ids))
+
+        if isinstance(item_ids, (list, tuple)):
+            item_ids = np.array(item_ids, dtype=np.int32)
+
+        assert len(user_ids) == len(item_ids)
+
+        if user_ids.dtype != np.int32:
+            user_ids = user_ids.astype(np.int32)
+        if item_ids.dtype != np.int32:
+            item_ids = item_ids.astype(np.int32)
+
+        if user_ids.min() < 0 or item_ids.min() < 0:
+            raise ValueError(
+                "User or item ids cannot be negative. "
+                "Check your inputs for negative numbers "
+                "or very large numbers that can overflow."
+            )
+
+        n_users = user_ids.max() + 1
+        n_items = item_ids.max() + 1
+
+        (user_features, item_features) = self._construct_feature_matrices(
+            n_users, n_items, user_features, item_features
+        )
+
+        lightfm_data = self._get_lightfm_data()
+
+        predictions = np.empty(len(user_ids), dtype=np.float64)
+        top_k_indice = np.zeros(top_k, dtype=int)
+
+        predict_lightfm_cxx(
+            user_ids,
+            item_ids,
+            predictions,
+            top_k_indice,
+            self.lfmw)
 
         return predictions, top_k_indice
 
