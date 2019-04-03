@@ -230,7 +230,8 @@ class LightFM(object):
         self.lfmw = None
 
     def __del__(self):
-        self.finalize_cxx_predictor()
+        if self.lfmw:
+           finalize_lightfm_cxx(self.lfmw)
 
     def _reset_state(self):
 
@@ -826,20 +827,20 @@ class LightFM(object):
 
         lightfm_data = self._get_lightfm_data()
 
-        predictions = np.empty(len(user_ids), dtype=np.float64)
+        predictions = np.empty(len(item_ids), dtype=np.float64)
         top_k_indice = np.zeros(top_k, dtype=int)
 
         predict_lightfm_with_cache(
             CSRMatrix(item_features),
             CSRMatrix(user_features),
-            user_ids,
+            user_id,
             item_ids,
             predictions,
             top_k_indice,
             top_k,
             lightfm_data,
             self.cache,
-            num_threads,
+            1
         )
 
         return predictions, top_k_indice
@@ -848,13 +849,8 @@ class LightFM(object):
     def initialize_cxx_predictor(self, model_dir):
         self.lfmw = initialize_lightfm_cxx(model_dir)
 
-
-    def finalize_cxx_predictor(self):
-        if self.lfmw:
-           finalize_lightfm_cxx(self.lfmw)
-
     def predict_cxx(
-        self, user_id, item_ids, top_k=10
+        self, user_id, item_ids, user_features=None, top_k=10
     ):
         """
         Compute the recommendation score for one user by usign cxx predictor
