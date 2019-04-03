@@ -31,9 +31,15 @@ COMPILE_FLAGS = -std=c++14 -Wall -Wextra -fPIC
 INCLUDES = -I include/ -I /usr/local/include
 # Space-separated pkg-config libraries used by this project
 LIBS = -lzip
+OS = $(shell uname 2>/dev/null || echo Unknown)
+INSTALL_PATH = /usr/local/lib/
+
+ifeq ($(OS), Darwin)
+	INSTALL_TOOL = install_name_tool -id $(INSTALL_PATH)libfastlightfmpred.so $(INSTALL_PATH)libfastlightfmpred.so
+endif
 
 .PHONY: default_target
-default_target: so
+default_target: debug
 
 .PHONY: example
 example: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
@@ -42,12 +48,22 @@ example: dirs $(OBJECTS)
 	$(CXX)  $(INCLUDES) -I $(SRC_PATH) example/main.cpp $(OBJECTS) -o $(BIN_PATH)/$@ $(LIBS) $(CXXFLAGS)
 
 .PHONY: install
-install: so
-	cp $(BIN_PATH)/$(SO_NAME) /usr/local/lib/
+install: release
+	cp $(BIN_PATH)/$(SO_NAME) $(INSTALL_PATH)
+	$(INSTALL_TOOL)
 
 .PHONY: release
 release: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -O3
 release: so
+
+.PHONY: debug
+debug: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
+debug: so
+
+.PHONY: test
+test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
+test: dirs $(BIN_PATH)/$(TEST_BIN_NAME)
+	$(BIN_PATH)/$(TEST_BIN_NAME)
 
 .PHONY: dirs
 dirs:
@@ -62,15 +78,7 @@ clean:
 	@$(RM) -r $(BUILD_PATH)
 	@$(RM) -r $(BIN_PATH)
 
-.PHONY: test
-test: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
-test: dirs $(BIN_PATH)/$(TEST_BIN_NAME)
-	$(BIN_PATH)/$(TEST_BIN_NAME)
-
-# checks the executable and symlinks to the output
-
 .PHONY: so
-so: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) -g -DDEBUG
 so: dirs $(BIN_PATH)/$(SO_NAME)
 
 # Creation of the executable
@@ -85,6 +93,7 @@ $(BIN_PATH)/$(TEST_BIN_NAME): $(TEST_OBJECTS) $(OBJECTS)
 
 # Add dependency files, if they exist
 -include $(DEPS)
+
 
 # Source file rules
 # After the first compilation they will be joined with the rules from the
