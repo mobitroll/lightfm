@@ -182,7 +182,6 @@ void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
   free(pred_table);
 }
 
-// Load the model
 void FastLightFM::load(string dir) {
   cnpy::npz_t data = cnpy::npz_load(dir + "/model.npz");
   item_embeddings = data["item_embeddings"];
@@ -192,10 +191,6 @@ void FastLightFM::load(string dir) {
   user_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/user-features.npz"));
   item_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/item-features.npz"));
 
-  init();
-}
-
-void FastLightFM::init() {
   assert(item_embeddings.shape[1] == user_embeddings.shape[1]);
   no_components = item_embeddings.shape[1];
   lightfm_cache = new FastLightFMCache(item_features->rows, user_features->rows, no_components + 1);
@@ -221,30 +216,3 @@ void FastLightFM::dump() {
 }
 #endif //DEBUG
 
-
-#if 0
-void FastLightFM::predict(cnpy::NpyArray& user_ids,
-                          cnpy::NpyArray& item_ids,
-                          cnpy::NpyArray& predictions) {
-    assert(user_ids.num_vals == item_ids.num_vals == predictions.num_vals);
-
-#ifdef DEBUG
-    /*
-        if user_ids.min() < 0 or item_ids.min() < 0:
-            raise ValueError(
-                "User or item ids cannot be negative. "
-                "Check your inputs for negative numbers "
-                "or very large numbers that can overflow."
-            )
-    */
-#endif // DEBUG
-
-    predict(user_ids,
-            item_ids,
-            predictions,
-            lightfm_data,
-        );
-
-        return predictions;
-}
-#endif
