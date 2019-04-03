@@ -805,7 +805,7 @@ class LightFM(object):
         """
 
         self._check_initialized()
-        
+ 
         if self.cache == None:
             raise ValueError(
             "Cache is not avalible,"
@@ -816,7 +816,7 @@ class LightFM(object):
 
 
         item_ids = self.check_item_ids(item_ids)
-
+        
         n_users = user_id + 1
         n_items = item_ids.max() + 1
 
