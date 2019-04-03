@@ -52,7 +52,7 @@ struct FastLightFMCache {
  * Compute latent representation for row_id.
  * The last element of the representation is the bias.
  */
-static void compute_representation(CSRMatrix *features,
+inline void compute_representation(CSRMatrix *features,
                                    float *feature_embeddings,
                                    float *feature_biases,
                                    int no_components,
@@ -78,7 +78,7 @@ static void compute_representation(CSRMatrix *features,
   }
 }
 
-static float compute_prediction_from_repr(float *user_repr, float *item_repr,
+inline float compute_prediction_from_repr(float *user_repr, float *item_repr,
                                           int no_components) {
   // Biases
   float result = user_repr[no_components] + item_repr[no_components];
@@ -125,16 +125,16 @@ void FastLightFM::predict(int user_id, int *item_ids, double *predictions,
   int *pred_table = (int *)malloc(sizeof(int) * (top_k + 1));
   float *pred_value = (float *)malloc(sizeof(float) * no_examples);
 
-  for (int i = 0; i < no_examples; i++) {
-    if (lightfm_cache->user_repr_cached[user_id] == 0) {
+  if (!user_id || lightfm_cache->user_repr_cached[user_id] == 0) {
       compute_representation(
-          this->user_features, this->user_embeddings.data<float>(),
-          this->user_biases.data<float>(), this->no_components, user_id,
-          this->user_scale,
-          &lightfm_cache->user_repr[lightfm_cache->stride * user_id]);
+              this->user_features, this->user_embeddings.data<float>(),
+              this->user_biases.data<float>(), this->no_components, user_id,
+              this->user_scale,
+              &lightfm_cache->user_repr[lightfm_cache->stride * user_id]);
       lightfm_cache->user_repr_cached[user_id] = 1;
-    }
+  }
 
+  for (int i = 0; i < no_examples; i++) {
     if (lightfm_cache->item_repr_cached[item_ids[i]] == 0) {
       compute_representation(
           this->item_features, this->item_embeddings.data<float>(),
