@@ -16,7 +16,7 @@ from ._lightfm_fast import (
     predict_ranks,
     predict_lightfm_with_cache,
     initialize_lightfm_cxx,
-    finalize_lightfm_cxx
+    finalize_lightfm_cxx,
     predict_lightfm_cxx
 )
 
@@ -760,7 +760,7 @@ class LightFM(object):
                 user_features.shape[0],
                 self.no_components + 1)
 
-    def check_item_ids(item_ids):
+    def check_item_ids(self, item_ids):
         if isinstance(item_ids, (list, tuple)):
             item_ids = np.array(item_ids, dtype=np.int32)
 
@@ -805,7 +805,7 @@ class LightFM(object):
         """
 
         self._check_initialized()
-
+        
         if self.cache == None:
             raise ValueError(
             "Cache is not avalible,"
@@ -815,7 +815,8 @@ class LightFM(object):
             "use predict instead. ")
 
 
-        item_ids = check_item_ids(item_ids)
+        item_ids = self.check_item_ids(item_ids)
+
         n_users = user_id + 1
         n_items = item_ids.max() + 1
 
@@ -853,7 +854,7 @@ class LightFM(object):
            finalize_lightfm_cxx(self.lfmw)
 
     def predict_cxx(
-        self, user_id, item_ids, item_features=None, user_features=None, top_k=10
+        self, user_id, item_ids, top_k=10
     ):
         """
         Compute the recommendation score for one user by usign cxx predictor
@@ -885,7 +886,7 @@ class LightFM(object):
                     "before calling this function"
             )
 
-        item_ids = check_item_ids(item_ids)
+        item_ids = self.check_item_ids(item_ids)
 
         if user_id < 0:
             raise ValueError(
