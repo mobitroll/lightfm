@@ -114,29 +114,24 @@ FastLightFM::~FastLightFM() {
   delete lightfm_cache;
 }
 
-void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
+void FastLightFM::predict(int user_id, int *item_ids, double *predictions,
                           int no_examples, long *top_k_indices, long top_k) {
 
   assert(is_initialized());
-  /*
-     Generate predictions.
-     */
+
   int start_idx = 0;
   float min_value = 0;
   float pred = 0;
   int *pred_table = (int *)malloc(sizeof(int) * (top_k + 1));
-  float *pred_value = (float *)malloc(sizeof(float) * no_examples);
+
+  float user_repr[no_components + 1];
+  compute_representation(
+          this->user_features, this->user_embeddings.data<float>(),
+          this->user_biases.data<float>(), this->no_components, user_id,
+          this->user_scale,
+          user_repr);
 
   for (int i = 0; i < no_examples; i++) {
-    if (lightfm_cache->user_repr_cached[user_ids[i]] == 0) {
-      compute_representation(
-          this->user_features, this->user_embeddings.data<float>(),
-          this->user_biases.data<float>(), this->no_components, user_ids[i],
-          this->user_scale,
-          &lightfm_cache->user_repr[lightfm_cache->stride * user_ids[i]]);
-      lightfm_cache->user_repr_cached[user_ids[i]] = 1;
-    }
-
     if (lightfm_cache->item_repr_cached[item_ids[i]] == 0) {
       compute_representation(
           this->item_features, this->item_embeddings.data<float>(),
@@ -147,10 +142,11 @@ void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
     }
 
     pred = compute_prediction_from_repr(
-        &lightfm_cache->user_repr[lightfm_cache->stride * user_ids[i]],
+        user_repr,
         &lightfm_cache->item_repr[lightfm_cache->stride * item_ids[i]],
         this->no_components);
-    predictions[i] = pred_value[i] = pred;
+
+    predictions[i] = pred;
 
     if (start_idx < top_k) {
       if (start_idx == 0) {
@@ -169,8 +165,8 @@ void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
 
       pred_table[top_k] = i;
       qsort_with_context(pred_table, top_k + 1, sizeof(int), pred_compar,
-                         pred_value);
-      min_value = pred_value[pred_table[top_k - 1]];
+                         predictions);
+      min_value = predictions[pred_table[top_k - 1]];
     }
   }
 
@@ -178,7 +174,6 @@ void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
     top_k_indices[t] = pred_table[t];
   }
 
-  free(pred_value);
   free(pred_table);
 }
 

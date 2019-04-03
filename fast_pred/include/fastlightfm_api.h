@@ -15,7 +15,7 @@ FastLFm fast_lfm_create();
 
 int fast_lfm_initialize(FastLFm fm, const char * model_dir);
 
-int fast_lfm_predict(FastLFm fm, int *user_ids, int *item_ids, double *predictions,
+int fast_lfm_predict(FastLFm fm, int user_id, int *item_ids, double *predictions,
     int no_examples, long *top_k_indice, long top_k);
 
 int fast_lfm_finalize(FastLFm fm);

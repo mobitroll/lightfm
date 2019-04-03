@@ -26,14 +26,14 @@ extern "C" int fast_lfm_initialize(FastLFm fm, const char * model_dir) {
     return FAST_LFM_OK;
 }
 
-extern "C" int fast_lfm_predict(FastLFm fm, int *user_ids, int *item_ids, double *predictions,
+extern "C" int fast_lfm_predict(FastLFm fm, int user_id, int *item_ids, double *predictions,
                int no_examples, long *top_k_indice, long top_k) {
     if (!fm) {
         return FAST_LFM_ERROR_NULL_FM;
     }
 
     auto fastlgm = get_fastlfm_obj(fm);
-    fastlgm->predict(user_ids, item_ids, predictions, no_examples, top_k_indice, top_k);
+    fastlgm->predict(user_id, item_ids, predictions, no_examples, top_k_indice, top_k);
     return FAST_LFM_OK;
 }
 
