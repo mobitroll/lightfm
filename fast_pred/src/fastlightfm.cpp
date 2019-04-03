@@ -123,15 +123,18 @@ void FastLightFM::predict(int user_id, int *item_ids, double *predictions,
   float min_value = 0;
   float pred = 0;
   int *pred_table = (int *)malloc(sizeof(int) * (top_k + 1));
+  float *pred_value = (float *)malloc(sizeof(float) * no_examples);
 
-  float user_repr[no_components + 1];
-  compute_representation(
+  for (int i = 0; i < no_examples; i++) {
+    if (lightfm_cache->user_repr_cached[user_id] == 0) {
+      compute_representation(
           this->user_features, this->user_embeddings.data<float>(),
           this->user_biases.data<float>(), this->no_components, user_id,
           this->user_scale,
-          user_repr);
+          &lightfm_cache->user_repr[lightfm_cache->stride * user_id]);
+      lightfm_cache->user_repr_cached[user_id] = 1;
+    }
 
-  for (int i = 0; i < no_examples; i++) {
     if (lightfm_cache->item_repr_cached[item_ids[i]] == 0) {
       compute_representation(
           this->item_features, this->item_embeddings.data<float>(),
@@ -142,11 +145,10 @@ void FastLightFM::predict(int user_id, int *item_ids, double *predictions,
     }
 
     pred = compute_prediction_from_repr(
-        user_repr,
+        &lightfm_cache->user_repr[lightfm_cache->stride * user_id],
         &lightfm_cache->item_repr[lightfm_cache->stride * item_ids[i]],
         this->no_components);
-
-    predictions[i] = pred;
+    predictions[i] = pred_value[i] = pred;
 
     if (start_idx < top_k) {
       if (start_idx == 0) {
@@ -165,8 +167,8 @@ void FastLightFM::predict(int user_id, int *item_ids, double *predictions,
 
       pred_table[top_k] = i;
       qsort_with_context(pred_table, top_k + 1, sizeof(int), pred_compar,
-                         predictions);
-      min_value = predictions[pred_table[top_k - 1]];
+                         pred_value);
+      min_value = pred_value[pred_table[top_k - 1]];
     }
   }
 
@@ -174,6 +176,7 @@ void FastLightFM::predict(int user_id, int *item_ids, double *predictions,
     top_k_indices[t] = pred_table[t];
   }
 
+  free(pred_value);
   free(pred_table);
 }
 

@@ -1301,7 +1301,7 @@ def predict_lightfm(CSRMatrix item_features,
 
 def predict_lightfm_with_cache(CSRMatrix item_features,
                     CSRMatrix user_features,
-                    int[::1] user_ids,
+                    int user_id,
                     int[::1] item_ids,
                     double[::1] predictions,
                     long[::1] top_k_indice,
@@ -1323,16 +1323,17 @@ def predict_lightfm_with_cache(CSRMatrix item_features,
         pred_table = <int *> malloc(sizeof(int) * (top_k + 1))
         pred_value = <flt *>malloc(sizeof(flt) * no_examples)
 
+        if user_id == 0 or lightfm_cache.user_repr_cached[user_id] == 0:
+            compute_representation(user_features,
+                                   lightfm.user_features,
+                                   lightfm.user_biases,
+                                   lightfm,
+                                   user_id,
+                                   lightfm.user_scale,
+                                   &lightfm_cache.user_repr[lightfm_cache.stride*user_id])
+            lightfm_cache.user_repr_cached[user_id] = 1
+
         for i in range(no_examples):
-            if user_ids[i] == 0 or lightfm_cache.user_repr_cached[user_ids[i]] == 0:
-                compute_representation(user_features,
-                                       lightfm.user_features,
-                                       lightfm.user_biases,
-                                       lightfm,
-                                       user_ids[i],
-                                       lightfm.user_scale,
-                                       &lightfm_cache.user_repr[lightfm_cache.stride*user_ids[i]])
-                lightfm_cache.user_repr_cached[user_ids[i]] = 1
 
             if lightfm_cache.item_repr_cached[item_ids[i]] == 0:
                 compute_representation(item_features,
@@ -1344,7 +1345,7 @@ def predict_lightfm_with_cache(CSRMatrix item_features,
                                        &lightfm_cache.item_repr[lightfm_cache.stride*item_ids[i]])
                 lightfm_cache.item_repr_cached[item_ids[i]] = 1
 
-            pred = compute_prediction_from_repr(&lightfm_cache.user_repr[lightfm_cache.stride*user_ids[i]],
+            pred = compute_prediction_from_repr(&lightfm_cache.user_repr[lightfm_cache.stride*user_id],
                                                 &lightfm_cache.item_repr[lightfm_cache.stride*item_ids[i]],
                                                 lightfm.no_components)
             predictions[i] = pred_value[i] = pred
