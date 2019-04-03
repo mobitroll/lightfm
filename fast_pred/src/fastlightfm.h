@@ -28,8 +28,6 @@ class FastLightFM {
 
   struct FastLightFMCache *lightfm_cache;
 
-  void init();
-
 public:
   FastLightFM()
       : item_features(nullptr), user_features(nullptr), no_components(0),

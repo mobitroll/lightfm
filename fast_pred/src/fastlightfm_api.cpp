@@ -6,11 +6,11 @@ static FastLightFM*  get_fastlfm_obj(FastLFm fm) {
     return reinterpret_cast<FastLightFM*>(fm);
 }
 
-extern "C" FastLFm fast_lm_create() {
+extern "C" FastLFm fast_lfm_create() {
     return new FastLightFM();
 }
 
-extern "C" int fast_lm_initialize(FastLFm fm, const char * model_dir) {
+extern "C" int fast_lfm_initialize(FastLFm fm, const char * model_dir) {
     if (!fm) {
         return FAST_LFM_ERROR_NULL_FM;
     }
@@ -19,7 +19,7 @@ extern "C" int fast_lm_initialize(FastLFm fm, const char * model_dir) {
     fastlgm->load(model_dir);
 
     if (!fastlgm->is_initialized()) {
-        fast_lm_finalize(fastlgm);
+        fast_lfm_finalize(fastlgm);
         return FAST_LFM_ERROR_CANNOT_LOAD_MODEL;
     }
 
@@ -37,7 +37,7 @@ extern "C" int fast_lfm_predict(FastLFm fm, int *user_ids, int *item_ids, double
     return FAST_LFM_OK;
 }
 
-extern "C" int fast_lm_finalize(FastLFm fm) {
+extern "C" int fast_lfm_finalize(FastLFm fm) {
     delete get_fastlfm_obj(fm);
     return FAST_LFM_OK;
 }
