@@ -37,7 +37,7 @@ public:
 
   void load(std::string dir);
 
-  void predict(int *user_ids, int *item_ids, double *predictions,
+  void predict(int user_id, int *item_ids, double *predictions,
                int no_examples, long *top_k_indice, long top_k);
 
   bool is_initialized();

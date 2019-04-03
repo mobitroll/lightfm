@@ -16,6 +16,7 @@ from ._lightfm_fast import (
     predict_ranks,
     predict_lightfm_with_cache,
     initialize_lightfm_cxx,
+    finalize_lightfm_cxx
     predict_lightfm_cxx
 )
 
@@ -227,6 +228,9 @@ class LightFM(object):
         self._reset_state()
         self.cache = None
         self.lfmw = None
+
+    def __del__(self):
+        self.finalize_cxx_predictor()
 
     def _reset_state(self):
 
@@ -756,23 +760,35 @@ class LightFM(object):
                 user_features.shape[0],
                 self.no_components + 1)
 
+    def check_item_ids(item_ids):
+        if isinstance(item_ids, (list, tuple)):
+            item_ids = np.array(item_ids, dtype=np.int32)
 
-    def predict_top_k_with_cache(
-        self, user_ids, item_ids, item_features=None, user_features=None, top_k=10, num_threads=1
+        if item_ids.dtype != np.int32:
+            item_ids = item_ids.astype(np.int32)
+
+        if  item_ids.min() < 0:
+            raise ValueError(
+                "User or item ids cannot be negative. "
+                "Check your inputs for negative numbers "
+                "or very large numbers that can overflow."
+            )
+
+        return item_ids
+
+
+    def predict_with_cache(
+        self, user_id, item_ids, item_features=None, user_features=None, top_k=10
     ):
         """
-        Compute the recommendation score for user-item pairs.
+        Compute the recommendation score by using optimized top k sort and cython
 
         For details on how to use feature matrices, see the documentation
         on the :class:`lightfm.LightFM` class.
 
         Arguments
         ---------
-        user_ids: integer or np.int32 array of shape [n_pairs,]
-             single user id or an array containing the user ids for the
-             user-item pairs for which a prediction is to be computed. Note
-             that these are LightFM's internal id's, i.e. the index of the
-             user in the interaction matrix used for fitting the model.
+        user_id: integer as the internal user_id in lightfm
         item_ids: np.int32 array of shape [n_pairs,]
              an array containing the item ids for the user-item pairs for which
              a prediction is to be computed. Note that these are LightFM's
@@ -782,42 +798,13 @@ class LightFM(object):
              Each row contains that user's weights over features.
         item_features: np.float32 csr_matrix of shape [n_items, n_item_features], optional
              Each row contains that item's weights over features.
-        num_threads: int, optional
-             Number of parallel computation threads to use. Should
-             not be higher than the number of physical cores.
 
         Returns
         -------
-
-        np.float32 array of shape [n_pairs,]
-            Numpy array containing the recommendation scores for pairs defined
-            by the inputs.
+        np.float32, np.int. prediction score and the top k indice.
         """
 
         self._check_initialized()
-
-        if not isinstance(user_ids, np.ndarray):
-            user_ids = np.repeat(np.int32(user_ids), len(item_ids))
-
-        if isinstance(item_ids, (list, tuple)):
-            item_ids = np.array(item_ids, dtype=np.int32)
-
-        assert len(user_ids) == len(item_ids)
-
-        if user_ids.dtype != np.int32:
-            user_ids = user_ids.astype(np.int32)
-        if item_ids.dtype != np.int32:
-            item_ids = item_ids.astype(np.int32)
-
-        if num_threads < 1:
-            raise ValueError("Number of threads must be 1 or larger.")
-
-        if user_ids.min() < 0 or item_ids.min() < 0:
-            raise ValueError(
-                "User or item ids cannot be negative. "
-                "Check your inputs for negative numbers "
-                "or very large numbers that can overflow."
-            )
 
         if self.cache == None:
             raise ValueError(
@@ -827,7 +814,9 @@ class LightFM(object):
             "when load the model, if they meant to be not avaliable"
             "use predict instead. ")
 
-        n_users = user_ids.max() + 1
+
+        item_ids = check_item_ids(item_ids)
+        n_users = user_id + 1
         n_items = item_ids.max() + 1
 
         (user_features, item_features) = self._construct_feature_matrices(
@@ -854,54 +843,70 @@ class LightFM(object):
 
         return predictions, top_k_indice
 
-    def initialize_cxx(self, model_dir):
+
+    def initialize_cxx_predictor(self, model_dir):
         self.lfmw = initialize_lightfm_cxx(model_dir)
 
-    def predict_top_k_cxx(
-        self, user_ids, item_ids, item_features=None, user_features=None, top_k=10
+
+    def finalize_cxx_predictor(self):
+        if self.lfmw:
+           finalize_lightfm_cxx(self.lfmw)
+
+    def predict_cxx(
+        self, user_id, item_ids, item_features=None, user_features=None, top_k=10
     ):
-        self._check_initialized()
+        """
+        Compute the recommendation score for one user by usign cxx predictor
 
-        if not isinstance(user_ids, np.ndarray):
-            user_ids = np.repeat(np.int32(user_ids), len(item_ids))
+        For details on how to use feature matrices, see the documentation
+        on the :class:`lightfm.LightFM` class.
 
-        if isinstance(item_ids, (list, tuple)):
-            item_ids = np.array(item_ids, dtype=np.int32)
+        Arguments
+        ---------
+        user_id: integer as the internal user_id in lightfm
+        item_ids: np.int32 array of shape [n_pairs,]
+             an array containing the item ids for the user-item pairs for which
+             a prediction is to be computed. Note that these are LightFM's
+             internal id's, i.e. the index of the item in the interaction
+             matrix used for fitting the model.
+        user_features: np.float32 csr_matrix of shape [n_users, n_user_features], optional
+             Each row contains that user's weights over features.
+        item_features: np.float32 csr_matrix of shape [n_items, n_item_features], optional
+             Each row contains that item's weights over features.
 
-        assert len(user_ids) == len(item_ids)
+        Returns
+        -------
 
-        if user_ids.dtype != np.int32:
-            user_ids = user_ids.astype(np.int32)
-        if item_ids.dtype != np.int32:
-            item_ids = item_ids.astype(np.int32)
-
-        if user_ids.min() < 0 or item_ids.min() < 0:
+        np.float32, np.int. prediction score and the top k indice.
+        """
+        if self.lfmw == None:
             raise ValueError(
-                "User or item ids cannot be negative. "
+                    "initialize_cxx_predictor need to be called"
+                    "before calling this function"
+            )
+
+        item_ids = check_item_ids(item_ids)
+
+        if user_id < 0:
+            raise ValueError(
+                "user id cannot be negative. "
                 "Check your inputs for negative numbers "
                 "or very large numbers that can overflow."
             )
 
-        n_users = user_ids.max() + 1
-        n_items = item_ids.max() + 1
 
-        (user_features, item_features) = self._construct_feature_matrices(
-            n_users, n_items, user_features, item_features
-        )
-
-        lightfm_data = self._get_lightfm_data()
-
-        predictions = np.empty(len(user_ids), dtype=np.float64)
+        predictions = np.empty(len(item_ids), dtype=np.float64)
         top_k_indice = np.zeros(top_k, dtype=int)
 
         predict_lightfm_cxx(
-            user_ids,
+            user_id,
             item_ids,
             predictions,
             top_k_indice,
             self.lfmw)
 
         return predictions, top_k_indice
+
 
     def predict(
         self, user_ids, item_ids, item_features=None, user_features=None, num_threads=1
