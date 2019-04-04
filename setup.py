@@ -32,6 +32,7 @@ def define_extensions(use_openmp):
     else:
         return [Extension("lightfm._lightfm_fast_openmp",
                           ['lightfm/_lightfm_fast_openmp.c'],
+                          libraries=["fastlightfmpred"],
                           extra_link_args=["-fopenmp"],
                           extra_compile_args=compile_args + ['-fopenmp'])]
 
