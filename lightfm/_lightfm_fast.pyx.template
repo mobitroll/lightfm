@@ -36,6 +36,21 @@ cdef extern from "stdlib.h" nogil:
     void* bsearch(const void *key, void *base, int nmemb, int size,
                   int(*compar)(const_void *, const_void *)) nogil
 
+cdef int FAST_LFM_OK            = 0;
+cdef int FAST_LFM_ERROR_NULL_FM = 1;
+cdef int FAST_LFM_ERROR_CANNOT_LOAD_MODEL = 2;
+
+
+cdef extern from "fastlightfm_api.h" nogil:
+    ctypedef void* FastLFm "FastLFm"
+    FastLFm fast_lfm_create() nogil
+    int fast_lfm_initialize(FastLFm fm, const char * model_dir) nogil
+    int fast_lfm_predict(FastLFm fm, int user_id, int *item_ids, double *predictions,
+            int no_examples, long *top_k_indice, long top_k) nogil
+    int fast_lfm_finalize(FastLFm fm) nogil
+
+cdef class FastLFmWrapper:
+    cdef FastLFm fm
 
 # The rand_r implementation included below is a translation of the musl
 # implementation (http://www.musl-libc.org/), which is licensed
@@ -1212,6 +1227,31 @@ cdef int pred_compar(const_void *a, const_void* b, void* arg) nogil:
     else:
         return 0
 
+def initialize_lightfm_cxx(model_dir):
+    if not isinstance(model_dir, unicode):
+        assert("model_dir needs to be unicd string")
+
+    model_dir_c = (<unicode>model_dir).encode('utf8')
+    fm = fast_lfm_create()
+    fast_lfm_initialize(fm, model_dir_c)
+    fmw = FastLFmWrapper()
+    fmw.fm = fm
+    return fmw
+
+def finalize_lightfm_cxx(FastLFmWrapper fmw):
+    if fmw != None:
+        fast_lfm_finalize(fmw.fm)
+
+def predict_lightfm_cxx(int user_id,
+                    int[::1] item_ids,
+                    double[::1] predictions,
+                    long[::1] top_k_indice,
+                    FastLFmWrapper fmw):
+    no_examples = predictions.shape[0]
+    fast_lfm_predict(fmw.fm, user_id, &item_ids[0], &predictions[0],
+                     no_examples, &top_k_indice[0], top_k_indice.shape[0])
+
+
 def predict_lightfm(CSRMatrix item_features,
                     CSRMatrix user_features,
                     int[::1] user_ids,
@@ -1261,7 +1301,7 @@ def predict_lightfm(CSRMatrix item_features,
 
 def predict_lightfm_with_cache(CSRMatrix item_features,
                     CSRMatrix user_features,
-                    int[::1] user_ids,
+                    int user_id,
                     int[::1] item_ids,
                     double[::1] predictions,
                     long[::1] top_k_indice,
@@ -1283,16 +1323,17 @@ def predict_lightfm_with_cache(CSRMatrix item_features,
         pred_table = <int *> malloc(sizeof(int) * (top_k + 1))
         pred_value = <flt *>malloc(sizeof(flt) * no_examples)
 
+        if user_id == 0 or lightfm_cache.user_repr_cached[user_id] == 0:
+            compute_representation(user_features,
+                                   lightfm.user_features,
+                                   lightfm.user_biases,
+                                   lightfm,
+                                   user_id,
+                                   lightfm.user_scale,
+                                   &lightfm_cache.user_repr[lightfm_cache.stride*user_id])
+            lightfm_cache.user_repr_cached[user_id] = 1
+
         for i in range(no_examples):
-            if user_ids[i] == 0 or lightfm_cache.user_repr_cached[user_ids[i]] == 0:
-                compute_representation(user_features,
-                                       lightfm.user_features,
-                                       lightfm.user_biases,
-                                       lightfm,
-                                       user_ids[i],
-                                       lightfm.user_scale,
-                                       &lightfm_cache.user_repr[lightfm_cache.stride*user_ids[i]])
-                lightfm_cache.user_repr_cached[user_ids[i]] = 1
 
             if lightfm_cache.item_repr_cached[item_ids[i]] == 0:
                 compute_representation(item_features,
@@ -1304,7 +1345,7 @@ def predict_lightfm_with_cache(CSRMatrix item_features,
                                        &lightfm_cache.item_repr[lightfm_cache.stride*item_ids[i]])
                 lightfm_cache.item_repr_cached[item_ids[i]] = 1
 
-            pred = compute_prediction_from_repr(&lightfm_cache.user_repr[lightfm_cache.stride*user_ids[i]],
+            pred = compute_prediction_from_repr(&lightfm_cache.user_repr[lightfm_cache.stride*user_id],
                                                 &lightfm_cache.item_repr[lightfm_cache.stride*item_ids[i]],
                                                 lightfm.no_components)
             predictions[i] = pred_value[i] = pred

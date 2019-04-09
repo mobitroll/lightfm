@@ -28,8 +28,6 @@ class FastLightFM {
 
   struct FastLightFMCache *lightfm_cache;
 
-  void init();
-
 public:
   FastLightFM()
       : item_features(nullptr), user_features(nullptr), no_components(0),
@@ -39,7 +37,7 @@ public:
 
   void load(std::string dir);
 
-  void predict(int *user_ids, int *item_ids, double *predictions,
+  void predict(int user_id, int *item_ids, double *predictions,
                int no_examples, long *top_k_indice, long top_k);
 
   bool is_initialized();

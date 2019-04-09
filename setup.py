@@ -13,7 +13,7 @@ from lightfm import __version__ as version  # NOQA
 
 
 def define_extensions(use_openmp):
-    compile_args = ['-ffast-math', '-O3']
+    compile_args = ['-ffast-math', '-O3', '-Ifast_pred/include/']
 
     # There are problems with illegal ASM instructions
     # when using the Anaconda distribution (at least on OSX).
@@ -27,10 +27,12 @@ def define_extensions(use_openmp):
         print('Compiling without OpenMP support.')
         return [Extension("lightfm._lightfm_fast_no_openmp",
                           ['lightfm/_lightfm_fast_no_openmp.c'],
+                          libraries=["fastlightfmpred"],
                           extra_compile_args=compile_args)]
     else:
         return [Extension("lightfm._lightfm_fast_openmp",
                           ['lightfm/_lightfm_fast_openmp.c'],
+                          libraries=["fastlightfmpred"],
                           extra_link_args=["-fopenmp"],
                           extra_compile_args=compile_args + ['-fopenmp'])]
 

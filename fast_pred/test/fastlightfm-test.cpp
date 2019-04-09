@@ -20,15 +20,14 @@ TEST_CASE( "FastLightFM can warm-start predict (user 0)" ) {
     lfm.load("test/data/models/simple");
 
     long top_k = 4;
-    int number_of_users = 5;
     int number_of_items = 5;
-    int user_ids_to_predict[] = { 0, 0, 0, 0, 0 };
+    int user_id_to_predict = 0;
     int item_ids_to_predict[] = { 0, 1, 2, 3, 4 };
     double predictions[number_of_items];
     long top_k_indices[top_k];
 
-    lfm.predict(user_ids_to_predict, item_ids_to_predict, predictions, 
-                number_of_users, top_k_indices, top_k);
+    lfm.predict(user_id_to_predict, item_ids_to_predict, predictions,
+                number_of_items, top_k_indices, top_k);
 
     REQUIRE( predictions[0] != 0.0 );
 
@@ -50,15 +49,14 @@ TEST_CASE( "FastLightFM can warm-start predict (user 1)" ) {
     lfm.load("test/data/models/simple");
 
     long top_k = 4;
-    int number_of_users = 5;
     int number_of_items = 5;
-    int user_ids_to_predict[] = { 1, 1, 1, 1, 1 };
+    int user_id_to_predict = 1;
     int item_ids_to_predict[] = { 0, 1, 2, 3, 4 };
     double predictions[number_of_items];
     long top_k_indices[top_k];
 
-    lfm.predict(user_ids_to_predict, item_ids_to_predict, predictions, 
-                number_of_users, top_k_indices, top_k);
+    lfm.predict(user_id_to_predict, item_ids_to_predict, predictions,
+                number_of_items, top_k_indices, top_k);
 
     REQUIRE( predictions[0] != 0.0 );
 
@@ -80,15 +78,14 @@ TEST_CASE( "FastLightFM can warm-start predict (user 3)" ) {
     lfm.load("test/data/models/simple");
 
     long top_k = 4;
-    int number_of_users = 5;
     int number_of_items = 5;
-    int user_ids_to_predict[] = { 3, 3, 3, 3, 3 };
+    int user_id_to_predict = 3;
     int item_ids_to_predict[] = { 0, 1, 2, 3, 4 };
     double predictions[number_of_items];
     long top_k_indices[top_k];
 
-    lfm.predict(user_ids_to_predict, item_ids_to_predict, predictions, 
-                number_of_users, top_k_indices, top_k);
+    lfm.predict(user_id_to_predict, item_ids_to_predict, predictions,
+                number_of_items, top_k_indices, top_k);
 
     REQUIRE( predictions[0] != 0.0 );
 
