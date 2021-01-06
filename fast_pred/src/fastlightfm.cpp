@@ -52,7 +52,7 @@ struct FastLightFMCache {
  * Compute latent representation for row_id.
  * The last element of the representation is the bias.
  */
-static void compute_representation(CSRMatrix *features,
+inline void compute_representation(CSRMatrix *features,
                                    float *feature_embeddings,
                                    float *feature_biases,
                                    int no_components,
@@ -78,7 +78,7 @@ static void compute_representation(CSRMatrix *features,
   }
 }
 
-static float compute_prediction_from_repr(float *user_repr, float *item_repr,
+inline float compute_prediction_from_repr(float *user_repr, float *item_repr,
                                           int no_components) {
   // Biases
   float result = user_repr[no_components] + item_repr[no_components];
@@ -114,29 +114,27 @@ FastLightFM::~FastLightFM() {
   delete lightfm_cache;
 }
 
-void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
+void FastLightFM::predict(int user_id, int *item_ids, double *predictions,
                           int no_examples, long *top_k_indices, long top_k) {
 
   assert(is_initialized());
-  /*
-     Generate predictions.
-     */
+
   int start_idx = 0;
   float min_value = 0;
   float pred = 0;
   int *pred_table = (int *)malloc(sizeof(int) * (top_k + 1));
   float *pred_value = (float *)malloc(sizeof(float) * no_examples);
 
-  for (int i = 0; i < no_examples; i++) {
-    if (lightfm_cache->user_repr_cached[user_ids[i]] == 0) {
+  if (!user_id || lightfm_cache->user_repr_cached[user_id] == 0) {
       compute_representation(
-          this->user_features, this->user_embeddings.data<float>(),
-          this->user_biases.data<float>(), this->no_components, user_ids[i],
-          this->user_scale,
-          &lightfm_cache->user_repr[lightfm_cache->stride * user_ids[i]]);
-      lightfm_cache->user_repr_cached[user_ids[i]] = 1;
-    }
+              this->user_features, this->user_embeddings.data<float>(),
+              this->user_biases.data<float>(), this->no_components, user_id,
+              this->user_scale,
+              &lightfm_cache->user_repr[lightfm_cache->stride * user_id]);
+      lightfm_cache->user_repr_cached[user_id] = 1;
+  }
 
+  for (int i = 0; i < no_examples; i++) {
     if (lightfm_cache->item_repr_cached[item_ids[i]] == 0) {
       compute_representation(
           this->item_features, this->item_embeddings.data<float>(),
@@ -147,7 +145,7 @@ void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
     }
 
     pred = compute_prediction_from_repr(
-        &lightfm_cache->user_repr[lightfm_cache->stride * user_ids[i]],
+        &lightfm_cache->user_repr[lightfm_cache->stride * user_id],
         &lightfm_cache->item_repr[lightfm_cache->stride * item_ids[i]],
         this->no_components);
     predictions[i] = pred_value[i] = pred;
@@ -182,7 +180,6 @@ void FastLightFM::predict(int *user_ids, int *item_ids, double *predictions,
   free(pred_table);
 }
 
-// Load the model
 void FastLightFM::load(string dir) {
   cnpy::npz_t data = cnpy::npz_load(dir + "/model.npz");
   item_embeddings = data["item_embeddings"];
@@ -192,10 +189,6 @@ void FastLightFM::load(string dir) {
   user_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/user-features.npz"));
   item_features = CSRMatrix::newInstance(cnpy::npz_load(dir + "/item-features.npz"));
 
-  init();
-}
-
-void FastLightFM::init() {
   assert(item_embeddings.shape[1] == user_embeddings.shape[1]);
   no_components = item_embeddings.shape[1];
   lightfm_cache = new FastLightFMCache(item_features->rows, user_features->rows, no_components + 1);
@@ -221,30 +214,3 @@ void FastLightFM::dump() {
 }
 #endif //DEBUG
 
-
-#if 0
-void FastLightFM::predict(cnpy::NpyArray& user_ids,
-                          cnpy::NpyArray& item_ids,
-                          cnpy::NpyArray& predictions) {
-    assert(user_ids.num_vals == item_ids.num_vals == predictions.num_vals);
-
-#ifdef DEBUG
-    /*
-        if user_ids.min() < 0 or item_ids.min() < 0:
-            raise ValueError(
-                "User or item ids cannot be negative. "
-                "Check your inputs for negative numbers "
-                "or very large numbers that can overflow."
-            )
-    */
-#endif // DEBUG
-
-    predict(user_ids,
-            item_ids,
-            predictions,
-            lightfm_data,
-        );
-
-        return predictions;
-}
-#endif
